@@ -19,7 +19,7 @@ fi
 echo "Using package manager: $PKG_MANAGER"
 
 # --- Dependencies ---
-DEPENDENCIES=(git cron)
+DEPENDENCIES=(git cron curl)
 
 for dep in "${DEPENDENCIES[@]}"; do
     if ! command -v "$dep" &> /dev/null; then
@@ -48,8 +48,21 @@ else
     echo "✅ Tailscale already installed."
 fi
 
+# --- Install Docker ---
+if ! command -v docker &> /dev/null; then
+    echo "Installing Docker..."
+    if [ "$PKG_MANAGER" = "apt" ]; then
+        sudo apt update
+        sudo apt install -y docker.io
+    else
+        $INSTALL_CMD docker
+    fi
+else
+    echo "✅ Docker already installed."
+fi
+
 # --- Ensure services start on boot ---
-SERVICES=(cron tailscaled)
+SERVICES=(cron tailscaled docker)
 
 for svc in "${SERVICES[@]}"; do
     if systemctl list-unit-files | grep -q "^$svc"; then
@@ -69,7 +82,6 @@ echo
 
 echo "copy ssh key from below for github:"
 cat "$PUB_KEY"
-
 
 # --- Tailscale Up with SSH & Exit Node ---
 echo
