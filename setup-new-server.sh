@@ -63,7 +63,7 @@ else
 fi
 
 # -------------------------
-# --- Install Docker ---
+# --- Install Docker & Docker Compose CLI plugin ---
 # -------------------------
 if ! command -v docker &> /dev/null; then
     echo "Installing Docker..."
@@ -75,6 +75,18 @@ if ! command -v docker &> /dev/null; then
     fi
 else
     echo "✅ Docker already installed."
+fi
+
+# Install Docker Compose plugin for modern `docker compose`
+if ! docker compose version &> /dev/null; then
+    echo "Installing Docker Compose CLI plugin..."
+    DOCKER_CONFIG_DIR="${HOME}/.docker/cli-plugins"
+    mkdir -p "$DOCKER_CONFIG_DIR"
+    curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m)" \
+        -o "$DOCKER_CONFIG_DIR/docker-compose"
+    chmod +x "$DOCKER_CONFIG_DIR/docker-compose"
+else
+    echo "✅ Docker Compose plugin already installed."
 fi
 
 # -------------------------
