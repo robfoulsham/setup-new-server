@@ -1,15 +1,20 @@
 #!/bin/bash
 set -e
 
+# -------------------------
 # --- Detect package manager ---
+# -------------------------
 if command -v apt &> /dev/null; then
     PKG_MANAGER="apt"
-    INSTALL_CMD="sudo apt update && sudo apt install -y"
+    UPDATE_CMD="sudo apt update"
+    INSTALL_CMD="sudo apt install -y"
 elif command -v dnf &> /dev/null; then
     PKG_MANAGER="dnf"
+    UPDATE_CMD="sudo dnf makecache"
     INSTALL_CMD="sudo dnf install -y"
 elif command -v yum &> /dev/null; then
     PKG_MANAGER="yum"
+    UPDATE_CMD="sudo yum makecache"
     INSTALL_CMD="sudo yum install -y"
 else
     echo "❌ Unsupported package manager. Install dependencies manually."
@@ -18,8 +23,13 @@ fi
 
 echo "Using package manager: $PKG_MANAGER"
 
-# --- Dependencies ---
+# -------------------------
+# --- Install dependencies ---
+# -------------------------
 DEPENDENCIES=(git cron curl)
+
+echo "Updating package lists..."
+$UPDATE_CMD
 
 for dep in "${DEPENDENCIES[@]}"; do
     if ! command -v "$dep" &> /dev/null; then
@@ -30,7 +40,9 @@ for dep in "${DEPENDENCIES[@]}"; do
     fi
 done
 
+# -------------------------
 # --- Generate SSH Key ---
+# -------------------------
 SSH_KEY="$HOME/.ssh/id_ed25519"
 if [ ! -f "$SSH_KEY" ]; then
     echo "Generating new SSH key..."
@@ -40,7 +52,9 @@ else
     echo "✅ SSH key already exists."
 fi
 
+# -------------------------
 # --- Install Tailscale ---
+# -------------------------
 if ! command -v tailscale &> /dev/null; then
     echo "Installing Tailscale..."
     curl -fsSL https://tailscale.com/install.sh | sh
@@ -48,7 +62,9 @@ else
     echo "✅ Tailscale already installed."
 fi
 
+# -------------------------
 # --- Install Docker ---
+# -------------------------
 if ! command -v docker &> /dev/null; then
     echo "Installing Docker..."
     if [ "$PKG_MANAGER" = "apt" ]; then
@@ -61,7 +77,9 @@ else
     echo "✅ Docker already installed."
 fi
 
+# -------------------------
 # --- Ensure services start on boot ---
+# -------------------------
 SERVICES=(cron tailscaled docker)
 
 for svc in "${SERVICES[@]}"; do
@@ -76,17 +94,22 @@ for svc in "${SERVICES[@]}"; do
     fi
 done
 
-# --- Copy SSH Public Key to Clipboard ---
+# -------------------------
+# --- Show SSH public key for GitHub ---
+# -------------------------
 PUB_KEY="$SSH_KEY.pub"
 echo
-
-echo "copy ssh key from below for github:"
+echo "Copy the SSH public key below to GitHub or other services:"
+echo "-----------------------------------------------------------"
 cat "$PUB_KEY"
+echo "-----------------------------------------------------------"
 
-# --- Tailscale Up with SSH & Exit Node ---
+# -------------------------
+# --- Start Tailscale with SSH & Exit Node ---
+# -------------------------
 echo
 echo "Starting Tailscale with SSH and advertising as exit node..."
 sudo tailscale up --ssh --advertise-exit-node
 
 echo
-echo "✅ Setup complete."
+echo "✅ Setup complete!"
