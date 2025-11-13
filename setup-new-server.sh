@@ -26,7 +26,7 @@ echo "Using package manager: $PKG_MANAGER"
 # -------------------------
 # --- Install dependencies ---
 # -------------------------
-DEPENDENCIES=(git cron curl awscli)
+DEPENDENCIES=(git cron curl aws)
 
 echo "Updating package lists..."
 $UPDATE_CMD
