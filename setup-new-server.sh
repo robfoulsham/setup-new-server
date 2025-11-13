@@ -26,7 +26,7 @@ echo "Using package manager: $PKG_MANAGER"
 # -------------------------
 # --- Install dependencies ---
 # -------------------------
-DEPENDENCIES=(git cron curl aws)
+DEPENDENCIES=(git cron curl unzip)
 
 echo "Updating package lists..."
 $UPDATE_CMD
@@ -34,16 +34,27 @@ $UPDATE_CMD
 for dep in "${DEPENDENCIES[@]}"; do
     if ! command -v "$dep" &> /dev/null; then
         echo "Installing $dep..."
-        # Special case for AWS CLI, install package named awscli if not found
-        if [ "$dep" = "aws" ]; then
-            $INSTALL_CMD awscli
-        else
-            $INSTALL_CMD "$dep"
-        fi
+        $INSTALL_CMD "$dep"
     else
         echo "✅ $dep already installed."
     fi
 done
+
+# -------------------------
+# --- Install AWS CLI v2 ---
+# -------------------------
+if ! command -v aws &> /dev/null; then
+    echo "Installing AWS CLI v2..."
+    TMP_DIR=$(mktemp -d)
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "$TMP_DIR/awscliv2.zip"
+    unzip "$TMP_DIR/awscliv2.zip" -d "$TMP_DIR"
+    sudo "$TMP_DIR/aws/install"
+    rm -rf "$TMP_DIR"
+else
+    echo "✅ AWS CLI already installed."
+fi
+
+aws --version
 
 # -------------------------
 # --- Generate SSH Key ---
