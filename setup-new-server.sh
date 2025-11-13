@@ -34,7 +34,12 @@ $UPDATE_CMD
 for dep in "${DEPENDENCIES[@]}"; do
     if ! command -v "$dep" &> /dev/null; then
         echo "Installing $dep..."
-        $INSTALL_CMD "$dep"
+        # Special case for AWS CLI, install package named awscli if not found
+        if [ "$dep" = "aws" ]; then
+            $INSTALL_CMD awscli
+        else
+            $INSTALL_CMD "$dep"
+        fi
     else
         echo "✅ $dep already installed."
     fi
