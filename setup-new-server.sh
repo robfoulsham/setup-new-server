@@ -26,7 +26,7 @@ echo "Using package manager: $PKG_MANAGER"
 # -------------------------
 # --- Install dependencies ---
 # -------------------------
-DEPENDENCIES=(git cron curl)
+DEPENDENCIES=(git cron curl awscli)
 
 echo "Updating package lists..."
 $UPDATE_CMD
@@ -87,6 +87,28 @@ if ! docker compose version &> /dev/null; then
     chmod +x "$DOCKER_CONFIG_DIR/docker-compose"
 else
     echo "✅ Docker Compose plugin already installed."
+fi
+
+# -------------------------
+# --- Create AWS credentials template ---
+# -------------------------
+AWS_DIR="$HOME/.aws"
+AWS_CREDS_FILE="$AWS_DIR/credentials"
+
+mkdir -p "$AWS_DIR"
+
+if [ ! -f "$AWS_CREDS_FILE" ]; then
+    cat > "$AWS_CREDS_FILE" <<EOL
+[default]
+aws_access_key_id = YOUR_ACCESS_KEY_ID
+aws_secret_access_key = YOUR_SECRET_ACCESS_KEY
+region = YOUR_DEFAULT_REGION
+EOL
+    echo
+    echo "⚠️ AWS credentials template created at $AWS_CREDS_FILE"
+    echo "Please edit this file and add your actual AWS credentials manually."
+else
+    echo "✅ AWS credentials file already exists at $AWS_CREDS_FILE"
 fi
 
 # -------------------------
