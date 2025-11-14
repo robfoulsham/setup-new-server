@@ -167,8 +167,17 @@ done
 # --- Start Tailscale with SSH & Exit Node ---
 # -------------------------
 echo
-echo "Starting Tailscale with SSH and advertising as exit node..."
+echo "=============================="
+echo "   Tailscale login URL below   "
+echo "=============================="
+
+# Run tailscale up and let user interact normally
 sudo tailscale up --ssh --advertise-exit-node
+
+echo "=============================="
+echo "✅ Tailscale setup complete!"
+echo "=============================="
+echo
 
 # -------------------------
 # --- Install Shared SSH Key from Proxmox host ---
@@ -185,7 +194,7 @@ chmod 700 "$SSH_DIR"
 # Copy private key
 if [ ! -f "$SSH_KEY" ]; then
     echo "Copying shared private key from root@proxmox..."
-    sudo scp root@proxmox:/root/.ssh/id_ed25519_shared "$SSH_KEY"
+    sudo scp -o StrictHostKeyChecking=no root@proxmox:/root/.ssh/id_ed25519_shared "$SSH_KEY"
     chmod 600 "$SSH_KEY"
 else
     echo "✅ SSH private key already exists at $SSH_KEY"
@@ -194,7 +203,7 @@ fi
 # Copy public key
 if [ ! -f "$SSH_PUB" ]; then
     echo "Copying shared public key from root@proxmox..."
-    sudo scp root@proxmox:/root/.ssh/id_ed25519_shared.pub "$SSH_PUB"
+    sudo scp -o StrictHostKeyChecking=no root@proxmox:/root/.ssh/id_ed25519_shared.pub "$SSH_PUB"
     chmod 644 "$SSH_PUB"
 else
     echo "✅ SSH public key already exists at $SSH_PUB"
