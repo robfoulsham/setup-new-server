@@ -190,7 +190,7 @@ aws_secret_access_key = YOUR_SECRET_ACCESS_KEY
 region = eu-west-2
 EOL
         echo -e "${YELLOW}⚠️ AWS credentials template created at $AWS_CREDS_FILE${NC}"
-        echo "Please edit this file and add your actual AWS credentials manually."
+        echo "edit this file to add  actual AWS credentials manually."
     else
         echo -e "${GREEN}✅ AWS credentials file already exists at $AWS_CREDS_FILE${NC}"
     fi
