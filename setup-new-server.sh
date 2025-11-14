@@ -79,30 +79,39 @@ else
 fi
 
 # -------------------------
-# --- Install Docker & Docker Compose CLI plugin ---
+# --- Install Docker (latest, official) ---
 # -------------------------
-if ! command -v docker &> /dev/null; then
-    echo "Installing Docker..."
-    if [ "$PKG_MANAGER" = "apt" ]; then
-        sudo apt update
-        sudo apt install -y docker.io
-    else
-        $INSTALL_CMD docker
-    fi
-else
-    echo "✅ Docker already installed."
-fi
+echo "Installing latest Docker from official Docker repository..."
 
-# Install Docker Compose plugin for modern `docker compose`
-if ! docker compose version &> /dev/null; then
-    echo "Installing Docker Compose CLI plugin..."
-    DOCKER_CONFIG_DIR="${HOME}/.docker/cli-plugins"
-    mkdir -p "$DOCKER_CONFIG_DIR"
-    curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m)" \
-        -o "$DOCKER_CONFIG_DIR/docker-compose"
-    chmod +x "$DOCKER_CONFIG_DIR/docker-compose"
+if [ "$PKG_MANAGER" = "apt" ]; then
+    # Remove any old Docker packages
+    sudo apt remove -y docker docker-engine docker.io containerd runc || true
+
+    # Install dependencies for Docker repo
+    sudo apt update
+    sudo apt install -y ca-certificates curl gnupg
+
+    # Add Docker’s official GPG key
+    sudo install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/$(. /etc/os-release; echo "$ID")/gpg \
+      | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+    # Add Docker repository
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+      https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") \
+      $(. /etc/os-release; echo "$VERSION_CODENAME") stable" \
+      | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+    # Install Docker Engine + Buildx + Compose plugin
+    sudo apt update
+    sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
 else
-    echo "✅ Docker Compose plugin already installed."
+    # Fallback for yum/dnf systems (best possible without changing script)
+    echo "Installing Docker using distro package (non-apt system detected)..."
+    $INSTALL_CMD docker || true
 fi
 
 # -------------------------
