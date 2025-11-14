@@ -59,14 +59,14 @@ aws --version
 # -------------------------
 # --- Generate SSH Key ---
 # -------------------------
-SSH_KEY="$HOME/.ssh/id_ed25519"
-if [ ! -f "$SSH_KEY" ]; then
-    echo "Generating new SSH key..."
-    mkdir -p "$HOME/.ssh"
-    ssh-keygen -t ed25519 -f "$SSH_KEY" -N "" -C "$(whoami)@$(hostname)"
-else
-    echo "✅ SSH key already exists."
-fi
+# SSH_KEY="$HOME/.ssh/id_ed25519"
+# if [ ! -f "$SSH_KEY" ]; then
+#     echo "Generating new SSH key..."
+#     mkdir -p "$HOME/.ssh"
+#     ssh-keygen -t ed25519 -f "$SSH_KEY" -N "" -C "$(whoami)@$(hostname)"
+# else
+#     echo "✅ SSH key already exists."
+# fi
 
 # -------------------------
 # --- Install Tailscale ---
@@ -156,12 +156,12 @@ done
 # -------------------------
 # --- Show SSH public key for GitHub ---
 # -------------------------
-PUB_KEY="$SSH_KEY.pub"
-echo
-echo "Copy the SSH public key below to GitHub or other services:"
-echo "-----------------------------------------------------------"
-cat "$PUB_KEY"
-echo "-----------------------------------------------------------"
+# PUB_KEY="$SSH_KEY.pub"
+# echo
+# echo "Copy the SSH public key below to GitHub or other services:"
+# echo "-----------------------------------------------------------"
+# cat "$PUB_KEY"
+# echo "-----------------------------------------------------------"
 
 # -------------------------
 # --- Start Tailscale with SSH & Exit Node ---
@@ -169,6 +169,39 @@ echo "-----------------------------------------------------------"
 echo
 echo "Starting Tailscale with SSH and advertising as exit node..."
 sudo tailscale up --ssh --advertise-exit-node
+
+# -------------------------
+# --- Install Shared SSH Key from Proxmox host ---
+# -------------------------
+SSH_DIR="$HOME/.ssh"
+SSH_KEY="$SSH_DIR/id_ed25519"
+SSH_PUB="$SSH_DIR/id_ed25519.pub"
+
+echo "Setting up shared SSH key from root@proxmox..."
+
+mkdir -p "$SSH_DIR"
+chmod 700 "$SSH_DIR"
+
+# Copy private key
+if [ ! -f "$SSH_KEY" ]; then
+    echo "Copying shared private key from root@proxmox..."
+    sudo scp root@proxmox:/root/.ssh/id_ed25519_shared "$SSH_KEY"
+    chmod 600 "$SSH_KEY"
+else
+    echo "✅ SSH private key already exists at $SSH_KEY"
+fi
+
+# Copy public key
+if [ ! -f "$SSH_PUB" ]; then
+    echo "Copying shared public key from root@proxmox..."
+    sudo scp root@proxmox:/root/.ssh/id_ed25519_shared.pub "$SSH_PUB"
+    chmod 644 "$SSH_PUB"
+else
+    echo "✅ SSH public key already exists at $SSH_PUB"
+fi
+
+echo "Shared SSH key installed."
+
 
 echo
 echo "✅ Setup complete!"
